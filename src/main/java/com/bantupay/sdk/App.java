@@ -1,22 +1,15 @@
 package com.bantupay.sdk;// create a completely new and unique pair of keys.
 // see more about KeyPair objects: https://stellar.github.io/java-stellar-sdk/org/stellar/sdk/KeyPair.html
 import okhttp3.*;
+import org.stellar.sdk.AbstractTransaction;
 import org.stellar.sdk.KeyPair;
+import org.stellar.sdk.Network;
 import shadow.com.google.gson.Gson;
+import org.stellar.sdk.Transaction;
 
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
-import java.io.UnsupportedEncodingException;
-import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.net.URLEncoder;
+import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.logging.Logger;
 
 class  App {
 
@@ -52,33 +45,48 @@ class  App {
         return encoded;
     }
 
-    public static String signTxt (String secretSeed, String transactionXDR, String networkPhrase) {
-
-        return "hi";
+    public static String signTxn (String secretSeed, String transactionXDR, String networkPhrase) throws IOException {
+        KeyPair pair = KeyPair.fromSecretSeed(secretSeed);
+        Network ntwrkPhrase = new Network(networkPhrase);
+        AbstractTransaction txn = Transaction.fromEnvelopeXdr(transactionXDR, ntwrkPhrase);
+        byte [] signedTxn = pair.sign(txn.hash());
+        String encoded = Base64.getEncoder().encodeToString(signedTxn);
+        return encoded;
     }
 
-    public static void main (String[] args) {
-//        JsonObject obj = new JsonObject();
-//        System.out.println(signHTTP("/v2/user/", "SBVNK4S2NU2QSBDZBKQCGR7DX5FTQFDJVKGWVCZLIEOV4QMANLQYSLNI"));
-        makeAPICall();
+    public static void main (String[] args) throws IOException {
     }
 
     public static final MediaType JSON
             = MediaType.get("application/json; charset=utf-8");
 
-    private static void makeAPICall(){
+    public static PaymentResponse confirmPaymentDetail(
+            String username,
+            String destination,
+            String memo,
+            String amount,
+            String secretKey,
+            String assetIssuer,
+            String assetCode,
+            String transaction,
+            String transactionSignature,
+            String networkPhrase
+    ){
         try {
-            KeyPairModel keyPairModel = createAccount();
+            KeyPair keyPairModel = KeyPair.fromSecretSeed(secretKey);
             String publicKey = keyPairModel.getAccountId();
+            String secretSeed = new String(keyPairModel.getSecretSeed());
 
             OkHttpClient client = new OkHttpClient();
-            PaymentRequest paymentRequest = PaymentRequest.getInstance("proxie", "thundeyy", "test payment", "0.001");
+            PaymentRequest paymentRequest = PaymentRequest.getInstance(
+                    username, destination, memo, amount, "", "", "", "", ""
+            );
             String encodedRequestBody = new Gson().toJson(paymentRequest);
             RequestBody body = RequestBody.create(JSON, encodedRequestBody);
 
-            String signature = signHTTP("/v2/users/proxie/payments", keyPairModel.getSecretSeed(), encodedRequestBody);
+            String signature = signHTTP("/v2/users/"+username+"/payments", secretSeed, encodedRequestBody);
             Request request = new Request.Builder()
-                    .url("https://api.bantupay.org/v2/users/proxie/payments")
+                    .url("https://api.bantupay.org/v2/users/"+username+"/payments")
                     .post(body)
                     .addHeader("X-BANTUPAY-PUBLIC-KEY", publicKey)
                     .addHeader("X-BANTUPAY-SIGNATURE", signature)
@@ -88,13 +96,99 @@ class  App {
             Response response = call.execute();
             if(response.isSuccessful()){
                 PaymentResponse paymentResponse = new Gson().fromJson(response.body().string(), PaymentResponse.class);
-                System.out.println("Successful call: " + paymentResponse.toString());
+                return paymentResponse;
             }else{
                 PaymentErrorResponse paymentErrorResponse = new Gson().fromJson(response.body().string(), PaymentErrorResponse.class);
-                System.out.println("Error: " +  paymentErrorResponse);
+                throw new Exception(String.valueOf(paymentErrorResponse));
             }
         } catch (Exception e) {
             e.printStackTrace();
         }
+        return null;
+    }
+
+
+    private static PaymentResponse makePayment(
+            String username,
+            String destination,
+            String memo,
+            String amount,
+            String secretKey,
+            String assetIssuer,
+            String assetCode,
+            PaymentResponse serverResponse
+    ){
+        try {
+            KeyPair keyPairModel = KeyPair.fromSecretSeed(secretKey);
+            String publicKey = keyPairModel.getAccountId();
+            String secretSeed = new String(keyPairModel.getSecretSeed());
+
+            String transaction = serverResponse.getTransaction();
+            String networkPhrase = serverResponse.getNetworkPassPhrase();
+            String transactionSignature = signTxn(secretSeed, transaction, networkPhrase);
+
+            OkHttpClient client = new OkHttpClient();
+            PaymentRequest paymentRequest = PaymentRequest.getInstance(
+                    username, destination, memo, amount, assetIssuer, assetCode, transaction,
+                    transactionSignature, networkPhrase
+            );
+            String encodedRequestBody = new Gson().toJson(paymentRequest);
+            RequestBody body = RequestBody.create(JSON, encodedRequestBody);
+
+            String signature = signHTTP("/v2/users/"+username+"/payments", secretSeed, encodedRequestBody);
+            Request request = new Request.Builder()
+                    .url("https://api.bantupay.org/v2/users/"+username+"/payments")
+                    .post(body)
+                    .addHeader("X-BANTUPAY-PUBLIC-KEY", publicKey)
+                    .addHeader("X-BANTUPAY-SIGNATURE", signature)
+                    .build();
+
+            Call call = client.newCall(request);
+            Response response = call.execute();
+            if(response.isSuccessful()){
+                PaymentResponse paymentResponse = new Gson().fromJson(response.body().string(), PaymentResponse.class);
+                return paymentResponse;
+            }else{
+                PaymentErrorResponse paymentErrorResponse = new Gson().fromJson(response.body().string(), PaymentErrorResponse.class);
+                throw new Exception(String.valueOf(paymentErrorResponse));
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    public static PaymentResponse expressPay(
+            String username,
+            String destination,
+            String memo,
+            String amount,
+            String secretKey,
+            String assetIssuer,
+            String assetCode
+    ) {
+        PaymentResponse res = confirmPaymentDetail(
+                username,
+                destination,
+                memo,
+                amount,
+                secretKey,
+                assetIssuer,
+                assetCode,
+                "",
+                "",
+                ""
+        );
+        PaymentResponse res2 = makePayment(
+                username,
+                destination,
+                memo,
+                amount,
+                secretKey,
+                assetIssuer,
+                assetCode,
+                res
+        );
+        return res2;
     }
 }
