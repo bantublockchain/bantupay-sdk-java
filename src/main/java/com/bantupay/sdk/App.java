@@ -66,6 +66,7 @@ class  App {
             String memo,
             String amount,
             String secretKey,
+            String baseURL,
             String assetIssuer,
             String assetCode,
             String transaction,
@@ -86,7 +87,7 @@ class  App {
 
             String signature = signHTTP("/v2/users/"+username+"/payments", secretSeed, encodedRequestBody);
             Request request = new Request.Builder()
-                    .url("https://api.bantupay.org/v2/users/"+username+"/payments")
+                    .url(baseURL+"/v2/users/"+username+"/payments")
                     .post(body)
                     .addHeader("X-BANTUPAY-PUBLIC-KEY", publicKey)
                     .addHeader("X-BANTUPAY-SIGNATURE", signature)
@@ -114,6 +115,7 @@ class  App {
             String memo,
             String amount,
             String secretKey,
+            String baseUrl,
             String assetIssuer,
             String assetCode,
             PaymentResponse serverResponse
@@ -164,6 +166,7 @@ class  App {
             String memo,
             String amount,
             String secretKey,
+            String baseUrl,
             String assetIssuer,
             String assetCode
     ) {
@@ -173,6 +176,7 @@ class  App {
                 memo,
                 amount,
                 secretKey,
+                baseUrl,
                 assetIssuer,
                 assetCode,
                 "",
@@ -185,6 +189,7 @@ class  App {
                 memo,
                 amount,
                 secretKey,
+                baseUrl,
                 assetIssuer,
                 assetCode,
                 res
