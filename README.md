@@ -1,6 +1,8 @@
 # BantuPay Sdk Java
 
+In your pom.xml file:
 
+```xml
 <repositories>
 		<repository>
 		    <id>jitpack.io</id>
@@ -13,3 +15,4 @@
 	    <artifactId>bantupay-sdk-java</artifactId>
 	    <version>1.0</version>
 </dependency>
+```
