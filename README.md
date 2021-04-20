@@ -13,6 +13,6 @@ In your pom.xml file:
 <dependency>
 	    <groupId>com.github.bantublockchain</groupId>
 	    <artifactId>bantupay-sdk-java</artifactId>
-	    <version>1.0</version>
+	    <version>0.1</version>
 </dependency>
 ```
