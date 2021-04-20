@@ -9,7 +9,7 @@
 </repositories>
 
 <dependency>
-	    <groupId>https://github.com/bantublockchain</groupId>
+	    <groupId>com.github.bantublockchain</groupId>
 	    <artifactId>bantupay-sdk-java</artifactId>
 	    <version>1.0</version>
 </dependency>
