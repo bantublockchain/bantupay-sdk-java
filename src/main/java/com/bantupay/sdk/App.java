@@ -6,12 +6,13 @@ import org.stellar.sdk.KeyPair;
 import org.stellar.sdk.Network;
 import shadow.com.google.gson.Gson;
 import org.stellar.sdk.Transaction;
+import shadow.com.google.gson.JsonSyntaxException;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 
-class  App {
+public class  App {
 
     public static KeyPairModel createAccount() {
         KeyPair pair = KeyPair.random();
@@ -19,23 +20,9 @@ class  App {
         return model;
     }
 
-    public static String signHTTP(String uri, String secretSeed, RequestBody requestBody) {
-        KeyPair pair = KeyPair.fromSecretSeed(secretSeed);
-        byte[] signedData;
-        System.out.println(requestBody.toString());
-        if(requestBody != null) {
-            signedData = pair.sign(uri.concat(new Gson().toJson(requestBody.toString())).getBytes(StandardCharsets.UTF_8));
-        }else{
-            signedData = pair.sign(uri.getBytes(StandardCharsets.UTF_8));
-        }
-        String encoded = Base64.getEncoder().encodeToString(signedData);
-        return encoded;
-    }
-
     public static String signHTTP(String uri, String secretSeed, String encodedBody) {
         KeyPair pair = KeyPair.fromSecretSeed(secretSeed);
         byte[] signedData;
-//        System.out.println(requestBody.toString());
         if(encodedBody != null) {
             signedData = pair.sign(uri.concat(encodedBody).getBytes(StandardCharsets.UTF_8));
         }else{
@@ -54,13 +41,12 @@ class  App {
         return encoded;
     }
 
-    public static void main (String[] args) throws IOException {
-    }
+    public static void main (String[] args) throws IOException {}
 
     public static final MediaType JSON
             = MediaType.get("application/json; charset=utf-8");
 
-    public static PaymentResponse confirmPaymentDetail(
+    public static Response confirmPaymentDetail(
             String username,
             String destination,
             String memo,
@@ -96,8 +82,7 @@ class  App {
             Call call = client.newCall(request);
             Response response = call.execute();
             if(response.isSuccessful()){
-                PaymentResponse paymentResponse = new Gson().fromJson(response.body().string(), PaymentResponse.class);
-                return paymentResponse;
+                return response;
             }else{
                 PaymentErrorResponse paymentErrorResponse = new Gson().fromJson(response.body().string(), PaymentErrorResponse.class);
                 throw new Exception(String.valueOf(paymentErrorResponse));
@@ -139,7 +124,7 @@ class  App {
 
             String signature = signHTTP("/v2/users/"+username+"/payments", secretSeed, encodedRequestBody);
             Request request = new Request.Builder()
-                    .url("https://api.bantupay.org/v2/users/"+username+"/payments")
+                    .url(baseUrl+"/v2/users/"+username+"/payments")
                     .post(body)
                     .addHeader("X-BANTUPAY-PUBLIC-KEY", publicKey)
                     .addHeader("X-BANTUPAY-SIGNATURE", signature)
@@ -169,8 +154,8 @@ class  App {
             String baseUrl,
             String assetIssuer,
             String assetCode
-    ) {
-        PaymentResponse res = confirmPaymentDetail(
+    ) throws IOException {
+        Response response = confirmPaymentDetail(
                 username,
                 destination,
                 memo,
@@ -183,6 +168,14 @@ class  App {
                 "",
                 ""
         );
+        PaymentResponse res = null;
+        try {
+            res = new Gson().fromJson(response.body().string(), PaymentResponse.class);
+        } catch (JsonSyntaxException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
         PaymentResponse res2 = makePayment(
                 username,
                 destination,
