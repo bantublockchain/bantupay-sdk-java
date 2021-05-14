@@ -1,6 +1,6 @@
 package com.bantupay.sdk;
 
-public class PaymentErrorResponse {
+public class ErrorResponse {
     private String data;
     private String error;
     private String message;
@@ -31,7 +31,7 @@ public class PaymentErrorResponse {
 
     @Override
     public String toString() {
-        return "PaymentErrorResponse{" +
+        return "ErrorResponse{" +
                 "data='" + data + '\'' +
                 ", error='" + error + '\'' +
                 ", message='" + message + '\'' +
