@@ -1,20 +1,20 @@
 package com.bantupay.sdk;
 
 public class CreateAccountResponse {
-    private String publicKey;
+    private String message;
 
     @Override
     public String toString() {
         return "CreateBudInfoResponse{"+
-                "publicKey='" + publicKey + '\'' +
+                "message='" + message + '\'' +
                 '}';
     }
 
-    public String getPublicKey() {
-        return publicKey;
+    public String getMessage() {
+        return message;
     }
 
-    public void setPublicKey(String publicKey) {
-        this.publicKey = publicKey;
+    public void setMessage(String publicKey) {
+        this.message = publicKey;
     }
 }
