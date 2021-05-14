@@ -41,27 +41,7 @@ public class  App {
         return encoded;
     }
 
-    public static void main (String[] args) throws IOException {
-        KeyPairModel key = createAccount();
-        System.out.println(key.getSecretSeed());
-        CreateAccountResponse acc = verfifyBudsInfo(
-                "SCXJ643HXWK4LVWYED2ZD3QGGQV2L4YPYSIOL33O6TAZWND4D5Q7VJZ5",
-                "meme3aaq1",
-                "d.ifrentecho@gmail.com",
-                "Last name",
-                "firstname",
-                "middlename",
-                "+2349033701012",
-                "https://api-alpha.dev.bantupay.org",
-                "412509",
-                "",
-                "",
-                ""
-        );
-
-//        System.out.println(new String(String.valueOf(acc)));
-    }
-
+    public static void main (String[] args) throws IOException { }
     public static final MediaType JSON
             = MediaType.get("application/json; charset=utf-8");
 
@@ -209,7 +189,7 @@ public class  App {
         return res2;
     }
 
-    public static Boolean createBudsInfo(
+    public static CreateAccountResponse createBudsInfo(
             String secretKey,
             String username,
             String email,
@@ -249,7 +229,8 @@ public class  App {
             Call call = client.newCall(request);
             Response response = call.execute();
             if(response.isSuccessful()){
-                return true;
+                CreateAccountResponse res = new Gson().fromJson(response.body().string(), CreateAccountResponse.class);
+                return res;
             }else{
                 ErrorResponse paymentErrorResponse = new Gson().fromJson(response.body().string(), ErrorResponse.class);
                 throw new Exception(String.valueOf(paymentErrorResponse));
@@ -260,7 +241,7 @@ public class  App {
         return null;
     }
 
-    public static CreateAccountResponse verfifyBudsInfo(
+    public static VerifyBudsInfoResponse verifyBudsInfo(
             String secretKey,
             String username,
             String email,
@@ -298,20 +279,15 @@ public class  App {
 
             Call call = client.newCall(request);
             Response response = call.execute();
-            System.out.println( "success?");
-            System.out.println(response.body().string());
-            System.out.println(response.isSuccessful());
 
             if(response.isSuccessful()){
-                CreateAccountResponse res = new Gson().fromJson(response.body().string(), CreateAccountResponse.class);
+                VerifyBudsInfoResponse res = new Gson().fromJson(response.body().string(), VerifyBudsInfoResponse.class);
                 return res;
             }else{
-                System.out.println("Error?...");
                 ErrorResponse errorResponse = new Gson().fromJson(response.body().string(), ErrorResponse.class);
                 throw new Exception(String.valueOf(errorResponse));
             }
         } catch (Exception e) {
-            System.out.println("here we are.. broken...");
             e.printStackTrace();
         }
         return null;
