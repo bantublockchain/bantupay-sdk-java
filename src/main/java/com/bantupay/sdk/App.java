@@ -298,9 +298,6 @@ public class  App {
 
             Call call = client.newCall(request);
             Response response = call.execute();
-            System.out.println( "success?");
-            System.out.println(response.body().string());
-            System.out.println(response.isSuccessful());
 
             if(response.isSuccessful()){
                 CreateAccountResponse res = new Gson().fromJson(response.body().string(), CreateAccountResponse.class);
