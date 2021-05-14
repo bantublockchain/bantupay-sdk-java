@@ -6,7 +6,7 @@
 
     <groupId>org.bantupay.sdk</groupId>
     <artifactId>bantupay-sdk-java</artifactId>
-    <version>0.1</version>
+    <version>0.2</version>
     <name>BantuPay Java SDK</name>
     <description>BantuPay SDK for Java based projects.</description>
     <url>https://github.com/bantublockchain/bantupay-sdk-java</url>
